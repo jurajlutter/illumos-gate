@@ -3680,7 +3680,7 @@ i_mdi_pi_state_change(mdi_pathinfo_t *pip, mdi_pathinfo_state_t state, int flag)
 				    DS_INITIALIZED)) {
 					MDI_CLIENT_UNLOCK(ct);
 					rv = ndi_devi_offline(cdip,
-					    NDI_DEVFS_CLEAN);
+					    NDI_DEVFS_CLEAN | NDI_DEVI_GONE);
 					MDI_CLIENT_LOCK(ct);
 
 					if (rv != NDI_SUCCESS) {
@@ -4860,14 +4860,9 @@ i_mdi_report_path_state(mdi_client_t *ct, mdi_pathinfo_t *pip)
 		status = "unknown";
 	}
 
-	if (cdip) {
+	if (cdip != NULL) {
 		ct_path = kmem_alloc(MAXPATHLEN, KM_SLEEP);
 
-		/*
-		 * NOTE: Keeping "multipath status: %s" and
-		 * "Load balancing: %s" format unchanged in case someone
-		 * scrubs /var/adm/messages looking for these messages.
-		 */
 		if (report_lb_c && report_lb_p) {
 			if (ct->ct_lb == LOAD_BALANCE_LBA) {
 				(void) snprintf(lb_buf, sizeof (lb_buf),
@@ -4881,20 +4876,14 @@ i_mdi_report_path_state(mdi_client_t *ct, mdi_pathinfo_t *pip)
 				    mdi_load_balance_rr);
 			}
 
-			cmn_err(mdi_debug_consoleonly ? CE_NOTE : CE_CONT,
-			    "?%s (%s%d) multipath status: %s: "
-			    "path %d %s is %s: Load balancing: %s\n",
-			    ddi_pathname(cdip, ct_path), ddi_driver_name(cdip),
-			    ddi_get_instance(cdip), ct_status,
-			    mdi_pi_get_path_instance(pip),
+			dev_err(cdip, CE_CONT, "!multipath status: %s: "
+			    "path %d %s is %s; load balancing: %s\n",
+			    ct_status, mdi_pi_get_path_instance(pip),
 			    mdi_pi_spathname(pip), status, lb_buf);
 		} else {
-			cmn_err(mdi_debug_consoleonly ? CE_NOTE : CE_CONT,
-			    "?%s (%s%d) multipath status: %s: "
-			    "path %d %s is %s\n",
-			    ddi_pathname(cdip, ct_path), ddi_driver_name(cdip),
-			    ddi_get_instance(cdip), ct_status,
-			    mdi_pi_get_path_instance(pip),
+			dev_err(cdip, CE_CONT,
+			    "!multipath status: %s: path %d %s is %s\n",
+			    ct_status, mdi_pi_get_path_instance(pip),
 			    mdi_pi_spathname(pip), status);
 		}
 
