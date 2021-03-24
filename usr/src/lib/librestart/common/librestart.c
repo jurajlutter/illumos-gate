@@ -899,6 +899,10 @@ restarter_set_states(restarter_event_handle_t *h, const char *inst,
 		id.i_state = cur_state;
 		id.i_next_state = next_state;
 
+                /* -1 means "uninitialized",
+                 * causing fallback to FAULT_THRESHOLD */
+                id.i_fault_threshold = -1;
+
 		ret = _restarter_commit_states(scf_h, &id, new_cur_state,
 		    new_next_state, p);
 

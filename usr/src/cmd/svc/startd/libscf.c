@@ -3121,7 +3121,7 @@ update_fault_count(restarter_inst_t *inst, int type)
 {
 	assert(type == FAULT_COUNT_INCR || type == FAULT_COUNT_RESET);
 
-	if (type == FAULT_COUNT_INCR) {
+	if (type == FAULT_COUNT_INCR && inst->ri_i.i_fault_threshold > 0) {
 		inst->ri_i.i_fault_count++;
 		log_framework(LOG_INFO, "%s: Increasing fault count to %d\n",
 		    inst->ri_i.i_fmri, inst->ri_i.i_fault_count);
@@ -3129,7 +3129,9 @@ update_fault_count(restarter_inst_t *inst, int type)
 	if (type == FAULT_COUNT_RESET)
 		inst->ri_i.i_fault_count = 0;
 
-	if (inst->ri_i.i_fault_count >= FAULT_THRESHOLD)
+	if (inst->ri_i.i_fault_count >= 
+                        (inst->ri_i.i_fault_threshold == -1 ? FAULT_THRESHOLD : 
+                         (inst->ri_i.i_fault_threshold + 1)))
 		return (1);
 
 	return (0);

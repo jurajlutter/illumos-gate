@@ -57,6 +57,7 @@ typedef struct instance_data {
 	int				i_primary_ctid_stopped;
 	int				i_fault_count;
 	int				i_dirty;
+        int                             i_fault_threshold;
 } instance_data_t;
 
 char *_restarter_get_channel_name(const char *, int);
